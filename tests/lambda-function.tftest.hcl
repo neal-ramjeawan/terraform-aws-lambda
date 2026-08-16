@@ -1,10 +1,10 @@
 # Fully mocks the AWS provider — no credentials, no real API calls, no cost.
-# Run with: cd modules/lambda-function && terraform test
+# Run with: terraform test (from the repo root)
 mock_provider "aws" {}
 
 variables {
   function_name = "test-function"
-  filename      = "${path.module}/tests/fixtures/dummy.zip"
+  filename      = "tests/fixtures/dummy.zip"
 }
 
 run "creates_function_with_defaults" {

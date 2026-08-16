@@ -1,6 +1,27 @@
 # Fully mocks the AWS provider — no credentials, no real API calls, no cost.
 # Run with: terraform test (from the repo root)
-mock_provider "aws" {}
+#
+# Without the mock_data override below, aws_iam_policy_document's own
+# computed `.json` output gets faked out too (mock_provider mocks the whole
+# provider, not just resources that hit a real API) — and the fake string
+# isn't valid JSON, which breaks anything downstream expecting a real
+# policy document, like aws_iam_role.this.assume_role_policy.
+mock_provider "aws" {
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect    = "Allow"
+            Action    = "sts:AssumeRole"
+            Principal = { Service = "lambda.amazonaws.com" }
+          }
+        ]
+      })
+    }
+  }
+}
 
 variables {
   function_name = "test-function"

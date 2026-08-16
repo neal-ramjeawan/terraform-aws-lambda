@@ -21,6 +21,12 @@ follows [Keep a Changelog](https://keepachangelog.com/), versions follow
   unauthenticated GitHub API rate limits when tflint fetches the AWS
   ruleset.
 - `softprops/action-gh-release@v2` bumped to `v3` (current major).
+- `terraform test` also failed on the *first* run, separately from the
+  `path.module` issue: `mock_provider` mocks the entire provider,
+  including `aws_iam_policy_document`'s own computed `.json` output —
+  not just resources that hit a real API. The faked JSON isn't valid,
+  which broke `aws_iam_role.this.assume_role_policy`. Fixed with a
+  `mock_data "aws_iam_policy_document"` default in the test file.
 
 ## [0.1.0] - 2026-08-16
 

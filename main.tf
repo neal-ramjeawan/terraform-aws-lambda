@@ -30,8 +30,24 @@ resource "aws_iam_role_policy_attachment" "additional" {
   policy_arn = each.value
 }
 
+locals {
+  # Whether to attach the inline policy is normally inferred from whether
+  # additional_inline_policy_json is set. That inference breaks when this
+  # module is composed by another module and the value comes from a
+  # conditionally-created data source — under full provider mocking (and
+  # in some real cross-resource cases too), that value's presence isn't
+  # knowable until apply, and a count can never depend on an unknown
+  # value. attach_additional_inline_policy lets a caller state the answer
+  # directly instead of making Terraform infer it.
+  attach_inline_policy = (
+    var.attach_additional_inline_policy != null
+    ? var.attach_additional_inline_policy
+    : var.additional_inline_policy_json != null
+  )
+}
+
 resource "aws_iam_role_policy" "inline" {
-  count = var.additional_inline_policy_json != null ? 1 : 0
+  count = local.attach_inline_policy ? 1 : 0
 
   name   = "${var.function_name}-inline"
   role   = aws_iam_role.this.id

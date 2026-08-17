@@ -62,6 +62,12 @@ variable "additional_inline_policy_json" {
   default     = null
 }
 
+variable "attach_additional_inline_policy" {
+  description = "Whether to attach additional_inline_policy_json. Leave null (the default) to infer it from whether additional_inline_policy_json is set — fine for direct use. Set this explicitly instead when calling this module from another module and the JSON's presence isn't statically known at plan time (e.g. it comes from a conditionally-created data source) — a count can never depend on an unknown value, so inference breaks in that case and this is the escape hatch."
+  type        = bool
+  default     = null
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log group retention, in days."
   type        = number

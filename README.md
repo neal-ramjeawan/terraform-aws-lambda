@@ -10,7 +10,7 @@ optional rotation function) as much as used directly.
 
 ```hcl
 module "notifier" {
-  source = "git::https://github.com/<you>/terraform-aws-lambda.git?ref=v0.1.0"
+  source = "git::https://github.com/neal-ramjeawan/terraform-aws-lambda.git?ref=v0.1.2"
 
   function_name    = "myapp-notifier"
   filename         = "notifier.zip"
@@ -76,6 +76,7 @@ No modules.
 | <a name="input_additional_inline_policy_json"></a> [additional\_inline\_policy\_json](#input\_additional\_inline\_policy\_json) | Optional inline policy document (JSON string) to attach directly to the execution role — the hook other modules use to grant scoped permissions (e.g. access to one specific secret). | `string` | `null` | no |
 | <a name="input_additional_policy_arns"></a> [additional\_policy\_arns](#input\_additional\_policy\_arns) | Extra managed policy ARNs to attach to the execution role, beyond the basic CloudWatch Logs policy every function gets. | `list(string)` | `[]` | no |
 | <a name="input_allowed_triggers"></a> [allowed\_triggers](#input\_allowed\_triggers) | Map of principals allowed to invoke this function. Each entry creates one aws\_lambda\_permission. Example: { secretsmanager = { principal = "secretsmanager.amazonaws.com", source\_arn = aws\_secretsmanager\_secret.this.arn } } | <pre>map(object({<br/>    principal  = string<br/>    source_arn = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_attach_additional_inline_policy"></a> [attach\_additional\_inline\_policy](#input\_attach\_additional\_inline\_policy) | Whether to attach additional\_inline\_policy\_json. Leave null (the default) to infer it from whether additional\_inline\_policy\_json is set — fine for direct use. Set this explicitly instead when calling this module from another module and the JSON's presence isn't statically known at plan time (e.g. it comes from a conditionally-created data source) — a count can never depend on an unknown value, so inference breaks in that case and this is the escape hatch. | `bool` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the function. | `string` | `""` | no |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables passed to the function. | `map(string)` | `{}` | no |
 | <a name="input_filename"></a> [filename](#input\_filename) | Path to the deployment package (.zip) to deploy. | `string` | n/a | yes |
@@ -105,18 +106,19 @@ No modules.
 ## Composing this module from another module
 
 This is the pattern
-[`terraform-aws-secrets-manager`](https://github.com/<you>/terraform-aws-secrets-manager)
+[`terraform-aws-secrets-manager`](https://github.com/neal-ramjeawan/terraform-aws-secrets-manager)
 uses — a parent module builds its own deployment package and permissions,
 then delegates the actual function to this one via a pinned tag:
 
 ```hcl
 module "rotation_lambda" {
-  source = "git::https://github.com/<you>/terraform-aws-lambda.git?ref=v0.1.0"
+  source = "git::https://github.com/neal-ramjeawan/terraform-aws-lambda.git?ref=v0.1.2"
 
-  function_name                  = "${var.secret_name}-rotation"
+  function_name                   = "${var.secret_name}-rotation"
   filename                        = data.archive_file.rotation_lambda.output_path
   source_code_hash                = data.archive_file.rotation_lambda.output_base64sha256
   additional_inline_policy_json   = data.aws_iam_policy_document.rotation_permissions.json
+  attach_additional_inline_policy = true # known statically — don't let Terraform infer it from the data source above, which isn't known until apply
 
   allowed_triggers = {
     secretsmanager = {

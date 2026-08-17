@@ -4,6 +4,18 @@ All notable changes to this module are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/), versions follow
 [SemVer](https://semver.org/).
 
+## [0.1.2] - 2026-08-16
+
+### Added
+- `attach_additional_inline_policy` variable — lets a caller state
+  explicitly whether `aws_iam_role_policy.inline` should be created,
+  instead of Terraform inferring it from whether
+  `additional_inline_policy_json` is null. The inference breaks when a
+  caller (like `terraform-aws-secrets-manager`) composes this module and
+  passes a value whose presence isn't known until apply — a `count` can
+  never depend on an unknown value. Defaults to `null` (infer, same
+  behavior as before) so existing callers are unaffected.
+
 ## [0.1.1] - 2026-08-16
 
 ### Fixed
